@@ -13,12 +13,13 @@ app.use(express.json());
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.uuzniqz.mongodb.net/?retryWrites=true&w=majority`;
-console.log(uri);
+
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
 async function run() {
     try {
         const serviceCollection = client.db('tourServices').collection('services')
+        const orderCollection = client.db('tourServices').collection('orders')
 
         app.get('/services', async (req, res) => {
             const query = {}
@@ -38,6 +39,12 @@ async function run() {
             const query = { _id: ObjectId(id) }
             const service = await serviceCollection.findOne(query)
             res.send(service)
+        })
+        //orders api
+        app.post('/orders', async (req, res) => {
+            const order = req.body;
+            const result = await orderCollection.insertOne(order);
+            res.send(result)
         })
     }
     finally {
