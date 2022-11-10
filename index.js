@@ -1,5 +1,6 @@
 const express = require('express');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const colors = require('colors');
 require('dotenv').config();
@@ -20,6 +21,14 @@ async function run() {
     try {
         const serviceCollection = client.db('tourServices').collection('services')
         const orderCollection = client.db('tourServices').collection('orders')
+        const userCollection = client.db('tourServices').collection('users')
+
+        //JWT token
+        app.post('/jwt', (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res.send({ token })
+        })
 
         app.get('/services', async (req, res) => {
             const query = {}
@@ -65,10 +74,26 @@ async function run() {
             const result = await orderCollection.deleteOne(query);
             res.send(result)
         })
+        //user api
+        app.post('/users', async (req, res) => {
+            const users = req.body;
+            const result = await userCollection.insertOne(users);
+            res.send(result)
+        })
+
+        //user get
+        app.get('/users', async (req, res) => {
+            let query = {};
+            const cursor = userCollection.find(query);
+            const users = await cursor.toArray();
+            res.send(users)
+        })
     }
     finally {
 
     }
+
+
 }
 run().catch(err => console.error(err))
 
